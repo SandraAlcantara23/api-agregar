@@ -1,6 +1,3 @@
-const { text } = require("body-parser");
-const { default: test } = require("node:test");
-
 async function fetchUsers() {
     try {
         const response = await fetch('https://api-agregar.onrender.com');
@@ -12,8 +9,9 @@ async function fetchUsers() {
             const userDiv = document.createElement('div');
             userDiv.className = 'user';
             userDiv.innerHTML = `
-                <span>${user.id}: ${user.nombre}</span>
+                <span id="user-${user.id}">${user.id}: ${user.nombre}</span>
                 <button onclick="deleteUser(${user.id})">Eliminar</button>
+                <button onclick="showEditUser(${user.id}, '${user.nombre}')">Editar</button>
             `;
             usersDiv.appendChild(userDiv);
         });
@@ -37,14 +35,10 @@ async function addUser() {
             Swal.fire({
                 position: "top-end",
                 icon: "success",
-                title: "Usuario Agregado",
-                text:"Se agrego el usuario a la base de datos",
-                showConfirmButton:true,
-                showConfirmButton: true,
-                confirmButtonText: "Enterado",
-                cancelButtonText: "No permitir",
+                title: "Usuario agregado con éxito",
+                showConfirmButton: false,
                 timer: 1500
-              });
+            });
             fetchUsers();
             document.getElementById('nombre').value = ''; // Limpiar el campo de entrada
         } else {
@@ -53,7 +47,6 @@ async function addUser() {
     } catch (error) {
         console.error('Error al agregar el usuario:', error);
     }
-    
 }
 
 async function deleteUser(id) {
@@ -74,5 +67,39 @@ async function deleteUser(id) {
         console.error('Error al eliminar el usuario:', error);
     }
 }
-fetchUsers();
-//que al agregar cada usuario que nos muetre dos boton de agregar y se muestre en el body con ayuda del fetchs
+
+function showEditUser(id, currentName) {
+    const newName = prompt('Ingrese el nuevo nombre:', currentName);
+    if (newName && newName !== currentName) {
+        editUser(id, newName);
+    }
+}
+
+async function editUser(id, nombre) {
+    try {
+        const response = await fetch('https://api-agregar.onrender.com', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, nombre })
+        });
+        if (response.ok) {
+            Swal.fire({
+                position: "top-end",
+                icon: "success",
+                title: "Usuario editado con éxito",
+                showConfirmButton: false,
+                timer: 1500
+            });
+            fetchUsers();
+        } else {
+            console.error('Error al editar el usuario:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error al editar el usuario:', error);
+    }
+}
+
+// Inicializar la lista de usuarios al cargar la página
+   fetchUsers();
